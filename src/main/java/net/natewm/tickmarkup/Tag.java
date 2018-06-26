@@ -4,10 +4,10 @@ import java.util.Map;
 
 public class Tag {
     private String name;
-    private Map<String, Object> parameters;
-    private Object contents;
+    private Map<String, Node> parameters;
+    private Node contents;
 
-    public Tag(String name, Map<String, Object> parameters, Object contents) {
+    public Tag(String name, Map<String, Node> parameters, Node contents) {
         this.name = name;
         this.parameters = parameters;
         this.contents = contents;
@@ -17,15 +17,19 @@ public class Tag {
         return name;
     }
 
-    public Map<String, Object> getParameters() {
+    public Map<String, Node> getParameters() {
         return parameters;
     }
 
-    public Object getContents() {
+    public Node getContents() {
         return contents;
     }
 
-    public Object getParam(String key) {
+    public Node getParam(String key) {
         return parameters.get(key);
+    }
+
+    public String toString() {
+        return name + parameters + ": " + contents;
     }
 }

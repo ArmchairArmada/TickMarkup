@@ -21,66 +21,457 @@ public class Parser {
         this.special = special;
     }
 
-    public Map<String, Object> parse(String source) {
-        Map<String, Object> doc = new HashMap<>();
-        int index=0;
+    /**
+     * Parses a TickMarkup formatted string.
+     *
+     * @param source  TickMarkup source string.
+     * @return DictionaryNode of processed data from file.
+     */
+    public DictionaryNode parse(String source) {
+        DictionaryNode dict = new DictionaryNode();
+        int index = 0;
 
         while (index < source.length()) {
             index = parseWhitespace(source, index);
-            index = parseDictItem(source, index, doc);
+            index = parseDictItem(source, index, dict);
             index = parseWhitespace(source, index);
             index = parseSeparator(source, index);
         }
 
-        return doc;
+        return dict;
     }
 
+    /**
+     * Checks if a character is whitespace.
+     *
+     * @param c  Character to check.
+     * @return  True if whitespace character, else false.
+     */
+    private static boolean isWhitespace(char c) {
+        return (c == ' ' || c == '\t' || c == '\r' || c == '\n');
+    }
+
+    /**
+     * Checks if a character can be used in a hexadecimal number.
+     *
+     * @param c Character to check.
+     * @return  True if valid hexadecimal digit, else false.
+     */
+    private static boolean isHexChar(char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
+
+    /**
+     * Skips over whitespace characters.
+     *
+     * @param source  TickMarkup formatted code.
+     * @param index  Current index position.
+     * @return  Index position after skipping whitespace.
+     */
     private int parseWhitespace(String source, int index) {
-        while (index < source.length() && (source.charAt(index) == ' ' || source.charAt(index) == '\t' || source.charAt(index) == '\n' || source.charAt(index) == '\r')) {
+        while (index < source.length() && isWhitespace(source.charAt(index))) {
             ++index;
         }
         return index;
     }
 
+    /**
+     * Processes separators, like tick-space and newline.
+     *
+     * @param source  TickMarkup formatted code.
+     * @param index  Current index position.
+     * @return  Index position after separator (or same index if no separator).
+     */
     private int parseSeparator(String source, int index) {
-        if (index >= source.length())
-            return index;
-
-        if (source.charAt(index) == '\n') {
+        if (index < source.length() && source.charAt(index) == '\n') {
             ++index;
         }
-        else if (source.charAt(index) == special && source.charAt(index+1) == ' ') {
+        else if (index < source.length()-1 && source.charAt(index) == special && source.charAt(index+1) == ' ') {
             index += 2;
         }
         return index;
     }
 
-    private int parseDictItem(String source, int index, Map<String, Object> dict) {
-        if (source.charAt(index) == special)
-            return index;
-
+    /**
+     * Parses a dictionary item from the data file.
+     *
+     * @param source  TickMarkup formatted code.
+     * @param index  Current index position.
+     * @param dict  DictionaryNode this item will belong to.
+     * @return  Index position after processing dictionary item.
+     */
+    private int parseDictItem(String source, int index, DictionaryNode dict) {
         int idStart = index;
+
         index = parseIdentifier(source, index);
+        if (index == idStart)
+            return index;   // No identifier, so no dictionary item.
+
         int idEnd = index;
         ++index;  // Skip ':'
+
         index = parseWhitespace(source, index);
-        Pair<Integer, Object> result = parseNode(source, index);
+        Pair<Integer, Node> result = parseNode(source, index);
         index = result.getKey();
 
-        dict.put(source.substring(idStart, idEnd), result.getValue());
+        try {
+            dict.getEntries().put(source.substring(idStart, idEnd), result.getValue());
+        } catch (IncorrectTypeException e) {
+            // We know this is a DictionaryNode, so there shouldn't be any errors.
+            e.printStackTrace();
+        }
 
         return index;
     }
 
+    /**
+     * Parses dictionary key identifiers.
+     *
+     * @param source  TickMarkup formatted code.
+     * @param index  Current index position.
+     * @return  Index after processing identifier.
+     */
     private int parseIdentifier(String source, int index) {
-        while (source.charAt(index) != ':' && source.charAt(index) != special) {
+        while (index < source.length()
+                && source.charAt(index) != '\n'
+                && source.charAt(index) != ':'
+                && source.charAt(index) != special) {
             ++index;
         }
         return index;
     }
 
-    private Pair<Integer, Object> parseNode(String source, int index) {
-        Pair <Integer, Object> result = null;
+    /**
+     * Parses a dictionary node.
+     *
+     * @param source  TickMarkup formatted code.
+     * @param index  Current index.
+     * @return  Index after processing and dictionary node.
+     */
+    private Pair<Integer, Node> parseDictNode(String source, int index) {
+        DictionaryNode node = new DictionaryNode();
+
+        while (index < source.length()-1
+                && !(source.charAt(index) == special
+                    && source.charAt(index+1) == '}')
+                ) {
+            index = parseWhitespace(source, index);
+            index = parseDictItem(source, index, node);
+            index = parseWhitespace(source, index);
+            index = parseSeparator(source, index);
+        }
+        if (source.charAt(index) == special) {
+            // Skip `}
+            index += 2;
+        }
+        // TODO: Syntax checking
+
+        return new Pair<>(index, node);
+    }
+
+    /**
+     * Parses a list node.
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @return  Index after parsing and List Node.
+     */
+    private Pair<Integer, Node> parseListNode(String source, int index) {
+        ListNode node = new ListNode();
+        Pair<Integer, Node> result;
+
+        while (index < source.length()
+                && !(source.charAt(index) == special
+                    && source.charAt(index+1) == ']')
+                ) {
+            index = parseWhitespace(source, index);
+            result = parseNode(source, index);
+            if (index != result.getKey()) {
+                index = result.getKey();
+                try {
+                    node.getItems().add(result.getValue());
+                } catch (IncorrectTypeException e) {
+                    // We know this is a ListNode, so should be no errors.
+                    e.printStackTrace();
+                }
+            }
+            index = parseWhitespace(source, index);
+            index = parseSeparator(source, index);
+        }
+        if (source.charAt(index) == special) {
+            // Skip `]
+            index += 2;
+        }
+        // TODO: Syntax checking
+
+        return new Pair<>(index, node);
+    }
+
+    /**
+     * Parse Tag node.
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @return  Index after parsing and Tags Node.
+     */
+    private Pair<Integer, Node> parseTagsNode(String source, int index) {
+        TagsNode node = new TagsNode();
+
+        while (index < source.length()-1
+                && !(source.charAt(index) == special
+                    && source.charAt(index+1) == '>')
+                ) {
+            index = parseWhitespace(source, index);
+            index = parseTagsItem(source, index, node);
+            index = parseWhitespace(source, index);
+            index = parseSeparator(source, index);
+        }
+        if (source.charAt(index) == special) {
+            // Skip `>
+            index += 2;
+        }
+        // TODO: Syntax checking
+
+        return new Pair<>(index, node);
+    }
+
+    /**
+     * Parse an individual tag item in a tags list..
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @param node  TagsNode the tag will belong to.
+     * @return  Index after parsing.
+     */
+    private int parseTagsItem(String source, int index, TagsNode node) {
+        int idStart = index;
+        index = parseIdentifier(source, index);
+        if (index == idStart) {
+            // No identifier, so no tag.
+            return index;
+        }
+        int idEnd = index;
+
+        Map<String, Node> params = null;
+        if (source.charAt(index) == special && source.charAt(index+1) == '(') {
+            index = parseWhitespace(source, index+2);
+            Pair<Integer, Map<String, Node>> result = parseParams(source, index);
+            index = result.getKey();
+            params = result.getValue();
+        }
+        else {
+            // Skip ':'
+            ++index;
+        }
+        index = parseWhitespace(source, index);
+        Pair<Integer, Node> result = parseNode(source, index);
+        index = result.getKey();
+
+        try {
+            node.getTags().add(new Tag(source.substring(idStart, idEnd), params, result.getValue()));
+        } catch (IncorrectTypeException e) {
+            // We know this is a TagsList, so there shouldn't be any errors.
+            e.printStackTrace();
+        }
+
+        return index;
+    }
+
+    /**
+     * Parses the parameters of a tag.
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @return  Index after parsing.
+     */
+    private Pair<Integer, Map<String, Node>> parseParams(String source, int index) {
+        // Check if the parameter list is empty.
+        if (source.charAt(index) == special)
+            return new Pair<>(index+3, null);
+
+        DictionaryNode params = new DictionaryNode();
+
+        while (index < source.length()
+                && !(source.charAt(index) == special
+                    && source.charAt(index+1) == ')')
+                ) {
+            index = parseWhitespace(source, index);
+            index = parseDictItem(source, index, params);
+            index = parseWhitespace(source, index);
+            index = parseSeparator(source, index);
+        }
+        if (source.charAt(index) == special) {
+            // Skip `):
+            index += 3;
+        }
+        // TODO: Syntax checking
+
+        try {
+            return new Pair<>(index, params.getEntries());
+        } catch (IncorrectTypeException e) {
+            // We know this is a DictionaryNode, so there should be no errors.
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Parses hexadecimal formatted integers.
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @return  Index after parsing and Integer node.
+     */
+    private Pair<Integer, Node> parseHex(String source, int index) {
+        int start = index;
+        while (isHexChar(source.charAt(index))) {
+            ++index;
+        }
+        int value = Integer.parseInt(source.substring(start, index), 16);
+        return new Pair<>(index, new IntegerNode(value));
+    }
+
+    /**
+     * Parses a binary formatted integer.
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @return  Index after parsing and Integer node.
+     */
+    private Pair<Integer, Node> parseBinary(String source, int index) {
+        int start = index;
+        while (source.charAt(index) == '0' || source.charAt(index) == '1') {
+            ++index;
+        }
+        int value = Integer.parseInt(source.substring(start, index), 2);
+        return new Pair<>(index, new IntegerNode(value));
+    }
+
+    /**
+     * Parses a boolean node.
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @return  Index after parsing.
+     */
+    private Pair<Integer, Node> parseBoolNode(String source, int index) {
+        // NOTE: If more keywords are added, this function would need to be renamed.
+        int start = index;
+        while (isAlphabetic(source.charAt(index))) {
+            ++index;
+        }
+        String substr = source.substring(start, index);
+        if (substr.equals("true")) {
+            return new Pair<>(index, new BooleanNode(true));
+        }
+        else if (substr.equals("false")) {
+            return new Pair<>(index, new BooleanNode(false));
+        }
+        // TODO: Throw exception
+        return null;
+    }
+
+    /**
+     * Parse decimal nodes (doubles).
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @param num  Number for digits before the decimal point.
+     * @return  The index after parsing and decimal node.
+     */
+    private Pair<Integer, Node> parseDecimalNode(String source, int index, int num) {
+        int start = index;
+        while (isDigit(source.charAt(index))) {
+            ++index;
+        }
+        String substr = source.substring(start, index);
+        double value = Double.parseDouble(num + "." + substr);
+        return new Pair<>(index, new DecimalNode(value));
+    }
+
+    /**
+     * Parses digits, which may be integers, decimals, dates, or time.
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @return  Index after parsing.
+     */
+    private Pair<Integer, Node> parseDigits(String source, int index) {
+        int start = index;
+        if (source.charAt(index) == '-')
+            ++index;
+
+        while (index < source.length() && isDigit(source.charAt(index))) {
+            ++index;
+        }
+        int num = Integer.parseInt(source.substring(start, index));
+        if (source.charAt(index) == '.') {
+            return parseDecimalNode(source, index+1, num);
+        }
+        else if (source.charAt(index) == ':') {
+            // TODO: Time
+        }
+        else if (source.charAt(index) == '-') {
+            // TODO: Date
+        }
+
+        return new Pair<>(index, new IntegerNode(num));
+    }
+
+    /**
+     * Parses a string node.
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @return  Index after parsing.
+     */
+    private Pair<Integer, Node> parseStringNode(String source, int index) {
+        // TODO: Escaped characters
+        int start;
+        StringBuilder sb = new StringBuilder();
+        boolean continueLine = true;
+
+        while (continueLine) {
+            continueLine = false;
+            start = index;
+            while (index < source.length()
+                    && source.charAt(index) != '\n'
+                    && source.charAt(index) != '\r'
+                    && source.charAt(index) != special) {
+                ++index;
+            }
+
+            // Check for string continuation characters to skip.
+            if (source.charAt(start) == '|' || source.charAt(start) == ':') {
+                // TODO: Figure out if there is a better way of doing this.  Skip first line?
+                ++start;
+            }
+            sb.append(source.substring(start, index));
+
+            index = parseWhitespace(source, index);
+            if (index < source.length() && source.charAt(index) == '|') {
+                ++index;
+                continueLine = true;
+            }
+            if (index < source.length() && source.charAt(index) == ':') {
+                ++index;
+                continueLine = true;
+                sb.append('\n');
+            }
+        }
+
+        return new Pair<>(index, new StringNode(sb.toString()));
+    }
+
+    /**
+     * Determines what kind of node this is and parses it.
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @return  Index after parsing and Node that was parsed.
+     */
+    private Pair<Integer, Node> parseNode(String source, int index) {
+        Pair <Integer, Node> result = null;
 
         if (source.charAt(index) == special) {
             ++index;
@@ -119,7 +510,7 @@ public class Parser {
                 result = parseDecimalNode(source, index+1, 0);
             }
             // Integer, Decimal, Date, Time, DateTime
-            else if (isDigit(source.charAt(index))) {
+            else if (isDigit(source.charAt(index)) || source.charAt(index) == '-') {
                 result = parseDigits(source, index);
             }
         }
@@ -129,199 +520,5 @@ public class Parser {
         }
 
         return result;
-    }
-
-    private Pair<Integer, Object> parseDictNode(String source, int index) {
-        Map<String, Object> node = new HashMap<>();
-
-        while (source.charAt(index) != special && source.charAt(index+1) != '}') {
-            index = parseWhitespace(source, index);
-            index = parseDictItem(source, index, node);
-            index = parseWhitespace(source, index);
-            index = parseSeparator(source, index);
-        }
-        index+=2;
-
-        return new Pair<>(index, node);
-    }
-
-    private Pair<Integer, Object> parseListNode(String source, int index) {
-        List<Object> node = new ArrayList<>();
-        Pair<Integer, Object> result;
-
-        index = parseWhitespace(source, index);
-        while (!(source.charAt(index) == special && source.charAt(index+1) == ']')) {
-            index = parseWhitespace(source, index);
-            result = parseNode(source, index);
-            index = result.getKey();
-            node.add(result.getValue());
-            index = parseWhitespace(source, index);
-            index = parseSeparator(source, index);
-        }
-        index+=2;
-
-        return new Pair<>(index, node);
-    }
-
-    private Pair<Integer, Object> parseTagsNode(String source, int index) {
-        List<Tag> node = new ArrayList<>();
-
-        index = parseWhitespace(source, index);
-        while (source.charAt(index) != special && source.charAt(index+1) != '>') {
-            index = parseWhitespace(source, index);
-            index = parseTagsItem(source, index, node);
-            index = parseWhitespace(source, index);
-            index = parseSeparator(source, index);
-        }
-        index+=2;
-
-        return new Pair<>(index, node);
-    }
-
-    private int parseTagsItem(String source, int index, List<Tag> node) {
-        if (source.charAt(index) == special)
-            return index;
-
-        int idStart = index;
-        index = parseIdentifier(source, index);
-        int idEnd = index;
-
-        Map<String, Object> params = null;
-        if (source.charAt(index) == special && source.charAt(index+1) == '(') {
-            Pair<Integer, Map<String, Object>> result = parseParams(source, index+2);
-            index = result.getKey();
-            params = result.getValue();
-        }
-        else {
-            ++index;
-        }
-        index = parseWhitespace(source, index);
-        Pair<Integer, Object> result = parseNode(source, index);
-        index = result.getKey();
-
-        node.add(new Tag(source.substring(idStart, idEnd), params, result.getValue()));
-
-        return index;
-    }
-
-    private Pair<Integer, Map<String, Object>> parseParams(String source, int index) {
-        if (source.charAt(index) == special)
-            return new Pair<>(index+3, null);
-
-        Map<String, Object> params = new HashMap<>();
-
-        while (index < source.length() && source.charAt(index) != special && source.charAt(index+1) != ')') {
-            index = parseWhitespace(source, index);
-            index = parseDictItem(source, index, params);
-            index = parseWhitespace(source, index);
-            index = parseSeparator(source, index);
-        }
-        index+=3;
-
-        return new Pair<>(index, params);
-    }
-
-    private Pair<Integer, Object> parseHex(String source, int index) {
-        int start = index;
-        while (isHexChar(source.charAt(index))) {
-            ++index;
-        }
-        int value = Integer.parseInt(source.substring(start, index), 16);
-        return new Pair<>(index, value);
-    }
-
-    private boolean isHexChar(char c) {
-        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-    }
-
-    private Pair<Integer, Object> parseBinary(String source, int index) {
-        int start = index;
-        while (source.charAt(index) == '0' || source.charAt(index) == '1') {
-            ++index;
-        }
-        int value = Integer.parseInt(source.substring(start, index), 2);
-        return new Pair<>(index, value);
-    }
-
-    private Pair<Integer, Object> parseBoolNode(String source, int index) {
-        int start = index;
-        while (isAlphabetic(source.charAt(index))) {
-            ++index;
-        }
-        String substr = source.substring(start, index);
-        if (substr.equals("true")) {
-            return new Pair<>(index, true);
-        }
-        else if (substr.equals("false")) {
-            return new Pair<>(index, false);
-        }
-        // TODO: Throw exception
-        return null;
-    }
-
-    private Pair<Integer, Object> parseDecimalNode(String source, int index, int num) {
-        int start = index;
-        while (isDigit(source.charAt(index))) {
-            ++index;
-        }
-        String substr = source.substring(start, index);
-        double value = Double.parseDouble(num + "." + substr);
-        return new Pair<>(index, value);
-    }
-
-    private Pair<Integer, Object> parseDigits(String source, int index) {
-        int start = index;
-        while (isDigit(source.charAt(index))) {
-            ++index;
-        }
-        int num = Integer.parseInt(source.substring(start, index));
-        if (source.charAt(index) == '.') {
-            return parseDecimalNode(source, index+1, num);
-        }
-        else if (source.charAt(index) == ':') {
-            // TODO: Time
-        }
-        else if (source.charAt(index) == '-') {
-            // TODO: Date
-        }
-
-        return new Pair<>(index, num);
-    }
-
-    private Pair<Integer, Object> parseStringNode(String source, int index) {
-        // TODO: Escaped characters
-        int start;
-        StringBuilder sb = new StringBuilder();
-        boolean continueLine = true;
-
-        while (continueLine) {
-            continueLine = false;
-            start = index;
-            while (index < source.length() && source.charAt(index) != '\n' && source.charAt(index) != '\r' && source.charAt(index) != special) {
-                ++index;
-            }
-            if (start == index) {
-                sb.append('\n');
-            }
-            else {
-                if (source.charAt(start) == '|' || source.charAt(start) == ':') {
-                    // TODO: Figure out if there is a better way of doing this.
-                    ++start;
-                }
-                sb.append(source.substring(start, index));
-            }
-            index = parseWhitespace(source, index);
-            if (index < source.length() && source.charAt(index) == '|') {
-                ++index;
-                continueLine = true;
-            }
-            if (index < source.length() && source.charAt(index) == ':') {
-                ++index;
-                continueLine = true;
-                sb.append('\n');
-            }
-        }
-
-        return new Pair<>(index, sb.toString());
     }
 }

@@ -31,24 +31,28 @@ public class Main {
         String source = null;
         try {
             source = new String(Files.readAllBytes(Paths.get("test.tml")), Charset.defaultCharset());
-            Map<String, Object> doc = parser.parse(source);
+            DictionaryNode doc = parser.parse(source);
 
-            // for (Tag tag : doc.getEntry("scene").getTags()) {
-
-            for (Tag tag : (List<Tag>)doc.get("scene")) {
+            for (Tag tag : doc.getEntry("scene").getTags()) {
                 System.out.println(tag.getName() + "(" +
                         tag.getParam("actor") + ") - " + tag.getContents());
             }
-            System.out.println(doc.get("description"));
 
-            // for (Tag tag : doc.getEntry("document").getTag(0).getTags()) {
+            System.out.println(doc.getEntry("description"));
 
-            for (Tag tag : (List<Tag>)((List<Tag>)doc.get("document")).get(0).getContents()) {
+            for (Tag tag : doc.getEntry("document").getTag(0).getContents().getTags()) {
                 System.out.println(tag.getContents());
             }
-            System.out.println(doc.get("path"));
-            System.out.println(doc.get("url"));
+
+            System.out.println(doc.getEntry("path"));
+            System.out.println(doc.getEntry("url"));
+
+            System.out.println();
+            System.out.println(doc);
+
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IncorrectTypeException e) {
             e.printStackTrace();
         }
     }
