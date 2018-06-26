@@ -1,0 +1,55 @@
+package net.natewm.tickmarkup;
+
+/*
+TODO:
+    Add Node with (exceptions thrown for anything not supported by type):
+        getEntries()    - Returns Map<String, Object>
+        getEntry(key)   - Returns Object associated with key
+        getTags()       - Returns List<Tag>
+        getTag(index)   - Returns Tag at given index.
+        getItems()      - Returns List<Object>
+        getItem(index)  - Returns item associated with index
+        getStr()     - Returns string value.
+        getInt()    - Returns integer value.
+        getDec()    - Returns double value.
+        getBool()    - Returns boolean value.
+        getDate()       - Returns date value.
+*/
+
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        Parser parser = new Parser();
+
+        String source = null;
+        try {
+            source = new String(Files.readAllBytes(Paths.get("test.tml")), Charset.defaultCharset());
+            Map<String, Object> doc = parser.parse(source);
+
+            // for (Tag tag : doc.getEntry("scene").getTags()) {
+
+            for (Tag tag : (List<Tag>)doc.get("scene")) {
+                System.out.println(tag.getName() + "(" +
+                        tag.getParam("actor") + ") - " + tag.getContents());
+            }
+            System.out.println(doc.get("description"));
+
+            // for (Tag tag : doc.getEntry("document").getTag(0).getTags()) {
+
+            for (Tag tag : (List<Tag>)((List<Tag>)doc.get("document")).get(0).getContents()) {
+                System.out.println(tag.getContents());
+            }
+            System.out.println(doc.get("path"));
+            System.out.println(doc.get("url"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

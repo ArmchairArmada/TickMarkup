@@ -1,0 +1,80 @@
+scene: `<
+	speak`(actor: Joe`): Who is lurking in the shadows?  Show yourself!
+	
+	speak`(actor: Ed`): How did you see me?
+	| I thought I was well hidden.
+	
+	move`(actor: Ed`): `[`10` `20`]
+	
+	speak`(actor: Joe`): Next time don't wear a florescent orange suit!
+	
+	test`(actor: None`):
+	|What if the text starts on the second line?
+	| It seems to work now... All of this could use more testing.
+`>
+
+description: `{
+	location: Outdoors
+	time of day: night
+	stuff: `[
+		things` whatever
+		`[
+			junk
+			garbage
+		`]
+	`]
+	how many?: `123.4
+	fancy: `true
+	binary: `0b1010
+	hex: `0xF0
+	sandwich: `[
+		bread
+		mayonnaise
+		tomato
+		lettuce
+		cheese
+		ham
+		turkey
+		bread
+	`]
+	dictionary: `{
+		apple: A fruit that grows on a tree.
+		banana: A yellow fruit.
+		pineapple: Not an apple and doesn't grow on pine trees.
+	`}
+`}
+
+document: `<
+	section: `<
+		heading: Welcome to the wide world of Bratwurst
+		
+		p: All around the world people like a good sausage.  Whether fried,
+		| baked, or cooked on a grill, nothing beats a good weiner.  Stuff that
+		| meat into your mouth!  It's all good.
+		
+		p: Intestine encased meat products date back to prehistoric times.
+		| Egyptian mummies have been found clutching onto two sausages so they
+		| can have something to eat in the afterlife.
+		
+		code`(language: python`):
+		:def fib(n):
+		:    a, b = 0, 1
+		:    while i in range(n):
+		:        a, b = b, a + b
+		:    return a
+		
+		art`(description: A frog.`):
+		:              _
+		:  __   ___.--'_'.
+		: ( _'.'. -   'o' )
+		: _\.'_'      _.-'
+		:( \'. )    //\'
+		: \_'-''---'\\__,
+		:  \'        '-\
+		:   '
+	`>
+`>
+
+path: c:\stuff\things\whatever.jpg
+use config: `true
+url: https://example.com
