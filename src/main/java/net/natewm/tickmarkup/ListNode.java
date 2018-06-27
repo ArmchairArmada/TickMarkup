@@ -71,6 +71,40 @@ public class ListNode implements Node {
         throw new IncorrectTypeException("List");
     }
 
+    @Override
+    public String toFormattedString(String indent, boolean inline) {
+        StringBuilder sb = new StringBuilder();
+        String newIndent = indent + "    ";
+
+        if (inline) {
+            sb.append("`[");
+
+            for (int i=0; i<items.size()-1; i++) {
+                sb.append(items.get(i).toFormattedString(newIndent, inline));
+                sb.append("` ");
+            }
+            if (items.size() > 0) {
+                sb.append(items.get(items.size()-1).toFormattedString(newIndent, inline));
+            }
+
+            sb.append("`]");
+        }
+        else {
+            sb.append("`[\n");
+
+            for (Node item : items) {
+                sb.append(newIndent);
+                sb.append(item.toFormattedString(newIndent, inline));
+                sb.append("\n");
+            }
+
+            sb.append(indent);
+            sb.append("`]");
+        }
+
+        return sb.toString();
+    }
+
     public String toString() {
         return items.toString();
     }

@@ -66,6 +66,11 @@ public class BooleanNode implements Node {
         throw new IncorrectTypeException("Boolean");
     }
 
+    @Override
+    public String toFormattedString(String indent, boolean inline) {
+        return "`" + value;
+    }
+
     public String toString() {
         return Boolean.toString(value);
     }

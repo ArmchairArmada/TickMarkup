@@ -66,6 +66,11 @@ public class IntegerNode implements Node {
         throw new IncorrectTypeException("Integer");
     }
 
+    @Override
+    public String toFormattedString(String indent, boolean inline) {
+        return "`" + value;
+    }
+
     public String toString() {
         return Integer.toString(value);
     }

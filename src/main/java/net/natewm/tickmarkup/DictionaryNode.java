@@ -1,9 +1,6 @@
 package net.natewm.tickmarkup;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DictionaryNode implements Node {
     private Map<String, Node> entries;
@@ -69,6 +66,46 @@ public class DictionaryNode implements Node {
     @Override
     public Date getDate() throws IncorrectTypeException {
         throw new IncorrectTypeException("Dictionary");
+    }
+
+    @Override
+    public String toFormattedString(String indent, boolean inline) {
+        StringBuilder sb = new StringBuilder();
+        String newIndent = indent + "    ";
+
+        if (inline) {
+            sb.append("`{");
+
+            List<Map.Entry<String, Node>> entryList = new ArrayList<>(entries.entrySet());
+            for (int i=0; i<entryList.size()-1; i++) {
+                sb.append(entryList.get(i).getKey());
+                sb.append(": ");
+                sb.append(entryList.get(i).getValue().toFormattedString(newIndent, inline));
+                sb.append("` ");
+            }
+            if (entryList.size() > 0) {
+                sb.append(entryList.get(entryList.size()-1).getKey());
+                sb.append(": ");
+                sb.append(entryList.get(entryList.size()-1).getValue().toFormattedString(newIndent, inline));
+            }
+            sb.append("`}");
+        }
+        else {
+            sb.append("`{\n");
+
+            for (Map.Entry<String, Node> entry : entries.entrySet()) {
+                sb.append(newIndent);
+                sb.append(entry.getKey());
+                sb.append(": ");
+                sb.append(entry.getValue().toFormattedString(newIndent, inline));
+                sb.append("\n");
+            }
+
+            sb.append(indent);
+            sb.append("`}");
+        }
+
+        return sb.toString();
     }
 
     public String toString() {

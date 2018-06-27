@@ -35,7 +35,7 @@ public class Main {
 
             for (Tag tag : doc.getEntry("scene").getTags()) {
                 System.out.println(tag.getName() + "(" +
-                        tag.getParam("actor") + ") - " + tag.getContents());
+                        tag.getParams().getEntry("actor") + ") - " + tag.getContents());
             }
 
             System.out.println(doc.getEntry("description"));
@@ -48,7 +48,7 @@ public class Main {
             System.out.println(doc.getEntry("url"));
 
             System.out.println();
-            System.out.println(doc);
+            System.out.println(doc.toFormattedString("", false));
 
         } catch (IOException e) {
             e.printStackTrace();

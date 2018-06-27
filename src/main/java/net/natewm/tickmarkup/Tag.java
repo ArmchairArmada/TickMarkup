@@ -4,12 +4,12 @@ import java.util.Map;
 
 public class Tag {
     private String name;
-    private Map<String, Node> parameters;
+    private Node params;
     private Node contents;
 
-    public Tag(String name, Map<String, Node> parameters, Node contents) {
+    public Tag(String name, Node params, Node contents) {
         this.name = name;
-        this.parameters = parameters;
+        this.params = params;
         this.contents = contents;
     }
 
@@ -17,19 +17,25 @@ public class Tag {
         return name;
     }
 
-    public Map<String, Node> getParameters() {
-        return parameters;
+    public Node getParams() {
+        return params;
     }
 
     public Node getContents() {
         return contents;
     }
 
-    public Node getParam(String key) {
-        return parameters.get(key);
+    public String toFormattedString(String indent, boolean inline) {
+        if (params == null) {
+            return name + ": " + contents.toFormattedString(indent, inline);
+        }
+        return name + params.toFormattedString(indent, true) + ": " + contents.toFormattedString(indent, inline);
     }
 
     public String toString() {
-        return name + parameters + ": " + contents;
+        if (params == null) {
+            return name + ":" + contents;
+        }
+        return name + params + ":" + contents;
     }
 }

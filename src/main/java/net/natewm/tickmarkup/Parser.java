@@ -252,17 +252,15 @@ public class Parser {
         }
         int idEnd = index;
 
-        Map<String, Node> params = null;
-        if (source.charAt(index) == special && source.charAt(index+1) == '(') {
-            index = parseWhitespace(source, index+2);
-            Pair<Integer, Map<String, Node>> result = parseParams(source, index);
+        Node params = null;
+        if (source.charAt(index) == special) {
+            Pair<Integer, Node> result = parseNode(source, index);
             index = result.getKey();
             params = result.getValue();
         }
-        else {
-            // Skip ':'
-            ++index;
-        }
+        // Skip ':'
+        ++index;
+
         index = parseWhitespace(source, index);
         Pair<Integer, Node> result = parseNode(source, index);
         index = result.getKey();
@@ -275,44 +273,6 @@ public class Parser {
         }
 
         return index;
-    }
-
-    /**
-     * Parses the parameters of a tag.
-     *
-     * @param source  TickMarkup code.
-     * @param index  Start index.
-     * @return  Index after parsing.
-     */
-    private Pair<Integer, Map<String, Node>> parseParams(String source, int index) {
-        // Check if the parameter list is empty.
-        if (source.charAt(index) == special)
-            return new Pair<>(index+3, null);
-
-        DictionaryNode params = new DictionaryNode();
-
-        while (index < source.length()
-                && !(source.charAt(index) == special
-                    && source.charAt(index+1) == ')')
-                ) {
-            index = parseWhitespace(source, index);
-            index = parseDictItem(source, index, params);
-            index = parseWhitespace(source, index);
-            index = parseSeparator(source, index);
-        }
-        if (source.charAt(index) == special) {
-            // Skip `):
-            index += 3;
-        }
-        // TODO: Syntax checking
-
-        try {
-            return new Pair<>(index, params.getEntries());
-        } catch (IncorrectTypeException e) {
-            // We know this is a DictionaryNode, so there should be no errors.
-            e.printStackTrace();
-            return null;
-        }
     }
 
     /**

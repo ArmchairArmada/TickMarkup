@@ -66,6 +66,11 @@ public class DateNode implements Node {
         return date;
     }
 
+    @Override
+    public String toFormattedString(String indent, boolean inline) {
+        return "`" + date;
+    }
+
     public String toString() {
         return date.toString();
     }

@@ -71,6 +71,40 @@ public class TagsNode implements Node {
         throw new IncorrectTypeException("Tags List");
     }
 
+    @Override
+    public String toFormattedString(String indent, boolean inline) {
+        StringBuilder sb = new StringBuilder();
+        String newIndent = indent + "    ";
+
+        if (inline) {
+            sb.append("`<");
+
+            for (int i=0; i<tags.size()-1; i++) {
+                sb.append(tags.get(i).toFormattedString(newIndent, inline));
+                sb.append("` ");
+            }
+            if (tags.size() > 0) {
+                sb.append(tags.get(tags.size()-1).toFormattedString(newIndent, inline));
+            }
+
+            sb.append("`>");
+        }
+        else {
+            sb.append("`<\n");
+
+            for (Tag tag : tags) {
+                sb.append(newIndent);
+                sb.append(tag.toFormattedString(newIndent, inline));
+                sb.append("\n");
+            }
+
+            sb.append(indent);
+            sb.append("`>");
+        }
+
+        return sb.toString();
+    }
+
     public String toString() {
         return tags.toString();
     }

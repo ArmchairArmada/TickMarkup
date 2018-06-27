@@ -16,4 +16,5 @@ public interface Node {
     double getDec() throws IncorrectTypeException;
     boolean getBool() throws IncorrectTypeException;
     Date getDate() throws IncorrectTypeException;
+    String toFormattedString(String indent, boolean inline);
 }

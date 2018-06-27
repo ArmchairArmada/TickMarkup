@@ -1,14 +1,14 @@
 scene: `<
-	speak`(actor: Joe`): Who is lurking in the shadows?  Show yourself!
+	speak`{actor: Joe`}: Who is lurking in the shadows?  Show yourself!
 	
-	speak`(actor: Ed`): How did you see me?
+	speak`{actor: Ed`}: How did you see me?
 	| I thought I was well hidden.
 	
-	move`(actor: Ed`): `[`10` `20`]
+	move`{actor: Ed`}: `[`10` `20`]
 	
-	speak`(actor: Joe`): Next time don't wear a florescent orange suit!
+	speak`{actor: Joe`}: Next time don't wear a florescent orange suit!
 	
-	test`(actor: None`):
+	test`{actor: None`}:
 	|What if the text starts on the second line?
 	| It seems to work now... All of this could use more testing.
 `>
@@ -27,6 +27,7 @@ description: `{
 	fancy: `true
 	binary: `0b1010
 	hex: `0xF0
+	negative: -555
 	sandwich: `[
 		bread
 		mayonnaise
@@ -56,14 +57,14 @@ document: `<
 		| Egyptian mummies have been found clutching onto two sausages so they
 		| can have something to eat in the afterlife.
 		
-		code`(language: python`):
+		code`{language: python`}:
 		:def fib(n):
 		:    a, b = 0, 1
 		:    while i in range(n):
 		:        a, b = b, a + b
 		:    return a
 		
-		art`(description: A frog.`):
+		art`[ascii` frog`]:
 		:              _
 		:  __   ___.--'_'.
 		: ( _'.'. -   'o' )
@@ -78,3 +79,5 @@ document: `<
 path: c:\stuff\things\whatever.jpg
 use config: `true
 url: https://example.com
+
+separated: `{a:one` b:two`}

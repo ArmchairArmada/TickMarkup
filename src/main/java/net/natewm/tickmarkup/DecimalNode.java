@@ -66,6 +66,11 @@ public class DecimalNode implements Node {
         throw new IncorrectTypeException("Decimal");
     }
 
+    @Override
+    public String toFormattedString(String indent, boolean inline) {
+        return "`" + value;
+    }
+
     public String toString() {
         return Double.toString(value);
     }
