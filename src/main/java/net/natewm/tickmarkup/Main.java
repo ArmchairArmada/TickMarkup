@@ -1,19 +1,9 @@
 package net.natewm.tickmarkup;
 
 /*
-TODO:
-    Add Node with (exceptions thrown for anything not supported by type):
-        getEntries()    - Returns Map<String, Object>
-        getEntry(key)   - Returns Object associated with key
-        getTags()       - Returns List<Tag>
-        getTag(index)   - Returns Tag at given index.
-        getItems()      - Returns List<Object>
-        getItem(index)  - Returns item associated with index
-        getStr()     - Returns string value.
-        getInt()    - Returns integer value.
-        getDec()    - Returns double value.
-        getBool()    - Returns boolean value.
-        getDate()       - Returns date value.
+TODO: Better syntax checking and throwing exceptions.
+TODO: Comment nodes.
+TODO: Date and time nodes.
 */
 
 
