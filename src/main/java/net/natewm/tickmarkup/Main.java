@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -21,28 +19,26 @@ public class Main {
         String source = null;
         try {
             source = new String(Files.readAllBytes(Paths.get("test.tml")), Charset.defaultCharset());
-            DictionaryNode doc = parser.parse(source);
+            TickMarkupData data = parser.parse(source);
 
-            for (Tag tag : doc.getEntry("scene").getTags()) {
+            for (Tag tag : data.getEntry("scene").getTags()) {
                 System.out.println(tag.getName() + "(" +
                         tag.getParams().getEntry("actor") + ") - " + tag.getContents());
             }
 
-            System.out.println(doc.getEntry("description"));
+            System.out.println(data.getEntry("description"));
 
-            for (Tag tag : doc.getEntry("document").getTag(0).getContents().getTags()) {
+            for (Tag tag : data.getEntry("document").getTag(0).getContents().getTags()) {
                 System.out.println(tag.getContents());
             }
 
-            System.out.println(doc.getEntry("path"));
-            System.out.println(doc.getEntry("url"));
+            System.out.println(data.getEntry("path"));
+            System.out.println(data.getEntry("url"));
 
             System.out.println();
-            System.out.println(doc.toFormattedString("", false));
+            System.out.println(data.toFormattedString());
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (IncorrectTypeException e) {
+        } catch (IOException | IncorrectTypeException | SyntaxException e) {
             e.printStackTrace();
         }
     }

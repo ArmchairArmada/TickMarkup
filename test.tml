@@ -47,6 +47,8 @@ description: `{
 
 document: `<
 	section: `<
+		unicode: ♞ ♚
+		
 		heading: Welcome to the wide world of Bratwurst
 		
 		p: All around the world people like a good sausage.  Whether fried,
@@ -77,7 +79,7 @@ document: `<
 `>
 
 path: c:\stuff\things\whatever.jpg
-use config: `true
+use config: `yes
 url: https://example.com
 
 separated: `{a:one` b:two`}

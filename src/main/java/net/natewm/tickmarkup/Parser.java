@@ -2,11 +2,6 @@ package net.natewm.tickmarkup;
 
 import javafx.util.Pair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static java.lang.Character.isAlphabetic;
 import static java.lang.Character.isDigit;
 
@@ -27,7 +22,7 @@ public class Parser {
      * @param source  TickMarkup source string.
      * @return DictionaryNode of processed data from file.
      */
-    public DictionaryNode parse(String source) {
+    public TickMarkupData parse(String source) throws SyntaxException {
         DictionaryNode dict = new DictionaryNode();
         int index = 0;
 
@@ -38,7 +33,7 @@ public class Parser {
             index = parseSeparator(source, index);
         }
 
-        return dict;
+        return new TickMarkupData(dict);
     }
 
     /**
@@ -100,7 +95,7 @@ public class Parser {
      * @param dict  DictionaryNode this item will belong to.
      * @return  Index position after processing dictionary item.
      */
-    private int parseDictItem(String source, int index, DictionaryNode dict) {
+    private int parseDictItem(String source, int index, DictionaryNode dict) throws SyntaxException {
         int idStart = index;
 
         index = parseIdentifier(source, index);
@@ -108,6 +103,9 @@ public class Parser {
             return index;   // No identifier, so no dictionary item.
 
         int idEnd = index;
+        if (source.charAt(index) != ':') {
+            throw new SyntaxException("Missing expected colon.");
+        }
         ++index;  // Skip ':'
 
         index = parseWhitespace(source, index);
@@ -148,23 +146,25 @@ public class Parser {
      * @param index  Current index.
      * @return  Index after processing and dictionary node.
      */
-    private Pair<Integer, Node> parseDictNode(String source, int index) {
+    private Pair<Integer, Node> parseDictNode(String source, int index) throws SyntaxException {
         DictionaryNode node = new DictionaryNode();
+        int start = -1;
 
-        while (index < source.length()-1
-                && !(source.charAt(index) == special
-                    && source.charAt(index+1) == '}')
-                ) {
+        while (index < source.length() && index != start) {
+            start = index;
             index = parseWhitespace(source, index);
             index = parseDictItem(source, index, node);
             index = parseWhitespace(source, index);
             index = parseSeparator(source, index);
         }
-        if (source.charAt(index) == special) {
-            // Skip `}
-            index += 2;
+        if (index >= source.length()-1) {
+            throw new SyntaxException("Unexpected end of file at " + index + ".");
         }
-        // TODO: Syntax checking
+        if (index < source.length()-1 && !(source.charAt(index) == special && source.charAt(index+1) == '}')) {
+            throw new SyntaxException("Missing dictionary closing brace at " + index + ".");
+        }
+        // Skip `}
+        index += 2;
 
         return new Pair<>(index, node);
     }
@@ -176,14 +176,13 @@ public class Parser {
      * @param index  Start index.
      * @return  Index after parsing and List Node.
      */
-    private Pair<Integer, Node> parseListNode(String source, int index) {
+    private Pair<Integer, Node> parseListNode(String source, int index) throws SyntaxException {
         ListNode node = new ListNode();
         Pair<Integer, Node> result;
+        int start = -1;
 
-        while (index < source.length()
-                && !(source.charAt(index) == special
-                    && source.charAt(index+1) == ']')
-                ) {
+        while (index < source.length() && index != start) {
+            start = index;
             index = parseWhitespace(source, index);
             result = parseNode(source, index);
             if (index != result.getKey()) {
@@ -198,11 +197,14 @@ public class Parser {
             index = parseWhitespace(source, index);
             index = parseSeparator(source, index);
         }
-        if (source.charAt(index) == special) {
-            // Skip `]
-            index += 2;
+        if (index >= source.length()-1) {
+            throw new SyntaxException("Unexpected end of file at " + index + ".");
         }
-        // TODO: Syntax checking
+        if (index < source.length()-1 && !(source.charAt(index) == special && source.charAt(index+1) == ']')) {
+            throw new SyntaxException("Missing list closing brace at " + index + ".");
+        }
+        // Skip `]
+        index += 2;
 
         return new Pair<>(index, node);
     }
@@ -214,23 +216,25 @@ public class Parser {
      * @param index  Start index.
      * @return  Index after parsing and Tags Node.
      */
-    private Pair<Integer, Node> parseTagsNode(String source, int index) {
+    private Pair<Integer, Node> parseTagsNode(String source, int index) throws SyntaxException {
         TagsNode node = new TagsNode();
+        int start = -1;
 
-        while (index < source.length()-1
-                && !(source.charAt(index) == special
-                    && source.charAt(index+1) == '>')
-                ) {
+        while (index < source.length() && index != start) {
+            start = index;
             index = parseWhitespace(source, index);
             index = parseTagsItem(source, index, node);
             index = parseWhitespace(source, index);
             index = parseSeparator(source, index);
         }
-        if (source.charAt(index) == special) {
-            // Skip `>
-            index += 2;
+        if (index >= source.length()-1) {
+            throw new SyntaxException("Unexpected end of file at " + index + ".");
         }
-        // TODO: Syntax checking
+        if (index < source.length()-1 && !(source.charAt(index) == special && source.charAt(index+1) == '>')) {
+            throw new SyntaxException("Missing tag closing brace at " + index + ".");
+        }
+        // Skip `>
+        index += 2;
 
         return new Pair<>(index, node);
     }
@@ -243,7 +247,7 @@ public class Parser {
      * @param node  TagsNode the tag will belong to.
      * @return  Index after parsing.
      */
-    private int parseTagsItem(String source, int index, TagsNode node) {
+    private int parseTagsItem(String source, int index, TagsNode node) throws SyntaxException {
         int idStart = index;
         index = parseIdentifier(source, index);
         if (index == idStart) {
@@ -257,6 +261,9 @@ public class Parser {
             Pair<Integer, Node> result = parseNode(source, index);
             index = result.getKey();
             params = result.getValue();
+        }
+        if (source.charAt(index) != ':') {
+            throw new SyntaxException("Missing expected colon at " + index + ".");
         }
         // Skip ':'
         ++index;
@@ -314,21 +321,20 @@ public class Parser {
      * @param index  Start index.
      * @return  Index after parsing.
      */
-    private Pair<Integer, Node> parseBoolNode(String source, int index) {
+    private Pair<Integer, Node> parseBoolNode(String source, int index) throws SyntaxException {
         // NOTE: If more keywords are added, this function would need to be renamed.
         int start = index;
         while (isAlphabetic(source.charAt(index))) {
             ++index;
         }
         String substr = source.substring(start, index);
-        if (substr.equals("true")) {
+        if (substr.equals("true") || substr.equals("yes")) {
             return new Pair<>(index, new BooleanNode(true));
         }
-        else if (substr.equals("false")) {
+        else if (substr.equals("false") || substr.equals("no")) {
             return new Pair<>(index, new BooleanNode(false));
         }
-        // TODO: Throw exception
-        return null;
+        throw new SyntaxException("Unrecognized keyword at " + index + ".");
     }
 
     /**
@@ -430,55 +436,56 @@ public class Parser {
      * @param index  Start index.
      * @return  Index after parsing and Node that was parsed.
      */
-    private Pair<Integer, Node> parseNode(String source, int index) {
-        Pair <Integer, Node> result = null;
-
+    private Pair<Integer, Node> parseNode(String source, int index) throws SyntaxException {
         if (source.charAt(index) == special) {
             ++index;
             // Dictionary
             if (source.charAt(index) == '{') {
-                result = parseDictNode(source, index+1);
+                return parseDictNode(source, index+1);
             }
             // List
             else if (source.charAt(index) == '[') {
-                result = parseListNode(source, index+1);
+                return parseListNode(source, index+1);
             }
             // Tags
             else if (source.charAt(index) == '<') {
-                result = parseTagsNode(source, index+1);
+                return parseTagsNode(source, index+1);
             }
             // Hex / Binary
             else if (source.charAt(index) == '0') {
                 // Hex
                 if (source.charAt(index+1) == 'x') {
-                    result = parseHex(source, index+2);
+                    return parseHex(source, index+2);
                 }
                 // Binary
                 else if (source.charAt(index+1) == 'b') {
-                    result = parseBinary(source, index+2);
+                    return parseBinary(source, index+2);
                 }
                 else {
-                    result = parseDigits(source, index);
+                    return parseDigits(source, index);
                 }
             }
             // Boolean
-            else if (source.charAt(index) == 't' || source.charAt(index) == 'f') {
-                result = parseBoolNode(source, index);
+            else if (isAlphabetic(source.charAt(index))) {
+                return parseBoolNode(source, index);
             }
             // Decimal
             else if (source.charAt(index) == '.') {
-                result = parseDecimalNode(source, index+1, 0);
+                return parseDecimalNode(source, index+1, 0);
             }
             // Integer, Decimal, Date, Time, DateTime
             else if (isDigit(source.charAt(index)) || source.charAt(index) == '-') {
-                result = parseDigits(source, index);
+                return parseDigits(source, index);
+            }
+            else if (source.charAt(index) == '}' || source.charAt(index) == ']' || source.charAt(index) == '>') {
+                return new Pair<>(index-1, null);
             }
         }
         // String
         else {
-            result = parseStringNode(source, index);
+            return parseStringNode(source, index);
         }
 
-        return result;
+        throw new SyntaxException("Unable to parse node at " + index + ".");
     }
 }
