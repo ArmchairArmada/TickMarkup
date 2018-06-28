@@ -1,3 +1,7 @@
+`# This is a test of the TickMarkup language.
+
+empty: `[ `]
+
 scene: `<
 	speak`{actor: Joe`}: Who is lurking in the shadows?  Show yourself!
 	
@@ -12,6 +16,10 @@ scene: `<
 	|What if the text starts on the second line?
 	| It seems to work now... All of this could use more testing.
 `>
+
+TEST: `{
+	HELLO: WORLD!  `# Does this comment work?
+`}
 
 description: `{
 	location: Outdoors

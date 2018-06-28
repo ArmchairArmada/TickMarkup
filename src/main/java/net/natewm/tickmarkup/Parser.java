@@ -28,6 +28,8 @@ public class Parser {
 
         while (index < source.length()) {
             index = parseWhitespace(source, index);
+            index = parseComment(source, index);
+            index = parseWhitespace(source, index);
             index = parseDictItem(source, index, dict);
             index = parseWhitespace(source, index);
             index = parseSeparator(source, index);
@@ -83,6 +85,22 @@ public class Parser {
         }
         else if (index < source.length()-1 && source.charAt(index) == special && source.charAt(index+1) == ' ') {
             index += 2;
+        }
+        return index;
+    }
+
+    /**
+     * Parses out comments -- skipping them to the end of the line.
+     *
+     * @param source  TickMarkup code.
+     * @param index  Start index.
+     * @return  Index after parsing.
+     */
+    private int parseComment(String source, int index) {
+        if (index < source.length()-1 && source.charAt(index) == special && source.charAt(index+1) == '#') {
+            while (index < source.length() && source.charAt(index) != '\n') {
+                ++index;
+            }
         }
         return index;
     }
@@ -153,6 +171,8 @@ public class Parser {
         while (index < source.length() && index != start) {
             start = index;
             index = parseWhitespace(source, index);
+            index = parseComment(source, index);
+            index = parseWhitespace(source, index);
             index = parseDictItem(source, index, node);
             index = parseWhitespace(source, index);
             index = parseSeparator(source, index);
@@ -183,6 +203,8 @@ public class Parser {
 
         while (index < source.length() && index != start) {
             start = index;
+            index = parseWhitespace(source, index);
+            index = parseComment(source, index);
             index = parseWhitespace(source, index);
             result = parseNode(source, index);
             if (index != result.getKey()) {
@@ -222,6 +244,8 @@ public class Parser {
 
         while (index < source.length() && index != start) {
             start = index;
+            index = parseWhitespace(source, index);
+            index = parseComment(source, index);
             index = parseWhitespace(source, index);
             index = parseTagsItem(source, index, node);
             index = parseWhitespace(source, index);
@@ -439,6 +463,7 @@ public class Parser {
     private Pair<Integer, Node> parseNode(String source, int index) throws SyntaxException {
         if (source.charAt(index) == special) {
             ++index;
+
             // Dictionary
             if (source.charAt(index) == '{') {
                 return parseDictNode(source, index+1);
