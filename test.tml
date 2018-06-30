@@ -29,6 +29,9 @@ description: `{
 		`[
 			junk
 			garbage
+			
+			This will be a multi-line
+			| item in this list.
 		`]
 	`]
 	how many?: `123.4
@@ -53,9 +56,10 @@ description: `{
 	`}
 `}
 
+`# A document formatted like this could be used to generate HTML
 document: `<
 	section: `<
-		unicode: ♞ ♚
+		unicode: ♞ ♚  `# These seemed to have worked.
 		
 		heading: Welcome to the wide world of Bratwurst
 		
