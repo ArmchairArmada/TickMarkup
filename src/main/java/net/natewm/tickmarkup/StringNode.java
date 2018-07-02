@@ -75,12 +75,37 @@ public class StringNode implements Node {
         String lines[] = string.split("\n");
 
         if (inline) {
-            return String.join("` ", lines);
-        }
-        else {
-            sb.append(lines[0]);
+            //return String.join("` ", lines);
             if (lines.length > 1) {
                 sb.append("\n");
+                sb.append(":");
+                sb.append(lines[0]);
+                sb.append("\n");
+            }
+            else {
+                sb.append(lines[0]);
+            }
+
+            for (int i = 1; i < lines.length-1; i++) {
+                sb.append(":");
+                sb.append(lines[i]);
+                sb.append("\n");
+            }
+            if (lines.length > 1) {
+                sb.append(":");
+                sb.append(lines[lines.length-1]);
+            }
+        }
+        else {
+            if (lines.length > 1) {
+                sb.append("\n");
+                sb.append(indent);
+                sb.append(":");
+                sb.append(lines[0]);
+                sb.append("\n");
+            }
+            else {
+                sb.append(lines[0]);
             }
 
             for (int i = 1; i < lines.length-1; i++) {

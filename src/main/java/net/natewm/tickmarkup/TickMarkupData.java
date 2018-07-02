@@ -25,14 +25,14 @@ public class TickMarkupData {
         return dict.getEntries();
     }
 
-    public String toFormattedString() {
+    public String toFormattedString(boolean inline) {
         StringBuilder sb = new StringBuilder();
 
         try {
             for (Map.Entry<String, Node> entry : dict.getEntries().entrySet()) {
                 sb.append(entry.getKey());
                 sb.append(": ");
-                sb.append(entry.getValue().toFormattedString("", false));
+                sb.append(entry.getValue().toFormattedString("", inline));
                 sb.append("\n");
             }
         } catch (IncorrectTypeException e) {

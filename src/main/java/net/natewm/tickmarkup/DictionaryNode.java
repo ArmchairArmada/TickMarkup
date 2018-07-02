@@ -71,7 +71,7 @@ public class DictionaryNode implements Node {
     @Override
     public String toFormattedString(String indent, boolean inline) {
         StringBuilder sb = new StringBuilder();
-        String newIndent = indent + "    ";
+        String newIndent = indent + "\t";
 
         if (inline) {
             sb.append("`{");

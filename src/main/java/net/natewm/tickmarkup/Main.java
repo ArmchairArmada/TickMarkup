@@ -36,7 +36,7 @@ public class Main {
             System.out.println(data.getEntry("url"));
 
             System.out.println();
-            System.out.println(data.toFormattedString());
+            System.out.println(data.toFormattedString(false));
 
         } catch (IOException | IncorrectTypeException | SyntaxException e) {
             e.printStackTrace();
